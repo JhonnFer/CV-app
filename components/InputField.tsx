@@ -1,3 +1,4 @@
+// components/InputField.tsx (modificado)
 import React from "react";
 import {
   View,
@@ -10,15 +11,23 @@ import {
 interface InputFieldProps extends TextInputProps {
   label: string;
   error?: string;
+  filterRegex?: RegExp; // Nuevo prop opcional
 }
 
-export const InputField = ({ label, error, ...props }: InputFieldProps) => {
+export const InputField = ({ label, error, filterRegex, onChangeText, ...props }: InputFieldProps) => {
+  // Función interna que filtra si filterRegex está definido
+  const handleChangeText = (text: string) => {
+    const filtered = filterRegex ? text.replace(filterRegex, "") : text;
+    onChangeText?.(filtered);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         style={[styles.input, error && styles.inputError]}
         placeholderTextColor="#999"
+        onChangeText={handleChangeText}
         {...props}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}

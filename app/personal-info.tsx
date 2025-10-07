@@ -1,8 +1,8 @@
-// app/personal-info.tsx (VERSION FINAL)
+// app/personal-info.tsx (modificado)
 import React from "react";
 import { View, StyleSheet, Alert, ScrollView } from "react-native";
 import { Controller } from "react-hook-form"
-import { z } from 'zod'; // Necesario para inferir el tipo FormValues
+import { z } from 'zod';
 import { router } from "expo-router";
 import { useCVContext } from "../context/CVContext";
 import { NavigationButton } from "../components/NavigationButton";
@@ -11,21 +11,17 @@ import { InputField } from "../components/InputField";
 import { PersonalInfoSchema } from "../hooks/useZod";
 import { useFormularioCV } from "../hooks/useFormularioCV";
 
-// Define el tipo de datos que se recibirá después de la validación de Zod
 type FormValues = z.infer<typeof PersonalInfoSchema>;
 
 export default function PersonalInfoScreen() {
     const { updatePersonalInfo } = useCVContext();
     
-    // 1. INICIALIZACIÓN: Todo el estado y la validación son manejados por el hook
     const { control, handleSubmit, formState: { errors } } = useFormularioCV(
         PersonalInfoSchema,
         'personalInfo' 
     );
     
-    // 2. FUNCIÓN DE GUARDADO: Se llama solo con datos validados
     const handleSave = (data: FormValues) => {
-        // 'data' contiene los valores de todos los campos, validados por Zod.
         updatePersonalInfo(data); 
 
         Alert.alert(
@@ -35,7 +31,6 @@ export default function PersonalInfoScreen() {
         );
     };
     
-    // 3. RENDERIZADO: Todos los InputFields usan Controller para vincularse al formulario
     return (
         <ScrollView style={styles.container}>
             <View style={styles.content}>
@@ -49,7 +44,11 @@ export default function PersonalInfoScreen() {
                             label="Nombre Completo"
                             placeholder="Juan Pérez"
                             value={value}
-                            onChangeText={onChange}
+                            onChangeText={(text) => {
+                                // Bloquea números y símbolos no permitidos
+                                const filtered = text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-']/g, '');
+                                onChange(filtered);
+                            }}
                             error={errors.fullName?.message} 
                         />
                     )}
@@ -81,9 +80,13 @@ export default function PersonalInfoScreen() {
                             label="Teléfono"
                             placeholder="+593 99 999 9999"
                             value={value}
-                            onChangeText={onChange}
+                            onChangeText={(text) => {
+                                // Solo permite números
+                                const filtered = text.replace(/[^0-9]/g, '');
+                                onChange(filtered);
+                            }}
                             error={errors.phone?.message}
-                            keyboardType="numeric" // Usar "numeric" para forzar solo números
+                            keyboardType="numeric"
                         />
                     )}
                 />
@@ -121,7 +124,6 @@ export default function PersonalInfoScreen() {
                     )}
                 />
 
-                {/* Botón de Guardar */}
                 <NavigationButton 
                     title="Guardar Información" 
                     onPress={handleSubmit(handleSave)} 

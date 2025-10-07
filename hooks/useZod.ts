@@ -46,23 +46,27 @@ export const PersonalInfoSchema = z.object({
 
 });
 export const ExperienceSchema = z.object({
-  id: z.string(), // Omitiremos 'id' en el formulario, pero Zod lo necesita en la inferencia
-  company: z.string().min(2, "El nombre de la empresa es obligatorio."),
-  position: z.string().min(2, "El cargo o posición es obligatorio."),
-  
-  // Validamos que el string sea un formato de fecha válido (YYYY-MM-DD es estándar)
-  startDate: z.string().date("La fecha de inicio es obligatoria y debe ser válida."),
-  
-  // endDate es opcional, pero si tiene valor, debe ser una fecha válida o la palabra 'Actual'
-  endDate: z.string().optional().or(z.literal(''))
-    .pipe(z.string().trim())
-    .refine(
-        (val) => val === 'Actual' || !val || z.string().date().safeParse(val).success,
-        { message: "Debe ser una fecha válida (AAAA-MM-DD) o la palabra 'Actual'." }
+  company: z
+    .string({ required_error: "El nombre de la empresa es obligatorio." })
+    .min(2, "El nombre de la empresa debe tener al menos 2 caracteres.")
+    .regex(
+      /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-']+$/,
+      "El nombre de la empresa solo puede contener letras y caracteres válidos."
     ),
-  
-  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres."),
-}).partial({ id: true }); // Permite que el formulario no incluya 'id' al inicio
-
+  position: z
+    .string({ required_error: "El cargo es obligatorio." })
+    .min(2, "El cargo debe tener al menos 2 caracteres.")
+    .regex(
+      /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-']+$/,
+      "El cargo solo puede contener letras y caracteres válidos."
+    ),
+  startDate: z.string({ required_error: "La fecha de inicio es obligatoria." }),
+  endDate: z.string().optional().or(z.literal("")),
+  description: z
+    .string()
+    .min(10, "La descripción debe tener al menos 10 caracteres.")
+    .optional()
+    .or(z.literal("")),
+});
 
 // Y repites para ExperienceSchema y EducationSchema...

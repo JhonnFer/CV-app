@@ -1,5 +1,3 @@
-// app/experience.tsx
-
 import React, { useState } from "react";
 import {
   View,
@@ -8,7 +6,10 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { InputField } from "../components/InputField";
 import { NavigationButton } from "../components/NavigationButton";
@@ -26,6 +27,23 @@ export default function ExperienceScreen() {
     endDate: "",
     description: "",
   });
+
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
+  // === Filtrar solo letras y algunos caracteres permitidos ===
+  const filterLetters = (text: string) => {
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-']*$/;
+    if (regex.test(text)) {
+      return text;
+    } else {
+      Alert.alert(
+        "Caracter inválido",
+        "Solo se permiten letras, espacios y caracteres especiales válidos (. - ')"
+      );
+      return formData.company; // o formData.position según el campo
+    }
+  };
 
   const handleAdd = () => {
     if (!formData.company || !formData.position || !formData.startDate) {
@@ -75,29 +93,77 @@ export default function ExperienceScreen() {
           label="Empresa *"
           placeholder="Nombre de la empresa"
           value={formData.company}
-          onChangeText={(text) => setFormData({ ...formData, company: text })}
+          onChangeText={(text) =>
+            setFormData({ ...formData, company: filterLetters(text) })
+          }
         />
 
         <InputField
           label="Cargo *"
           placeholder="Tu posición"
           value={formData.position}
-          onChangeText={(text) => setFormData({ ...formData, position: text })}
+          onChangeText={(text) =>
+            setFormData({ ...formData, position: filterLetters(text) })
+          }
         />
 
-        <InputField
-          label="Fecha de Inicio *"
-          placeholder="Ej: Enero 2020"
-          value={formData.startDate}
-          onChangeText={(text) => setFormData({ ...formData, startDate: text })}
-        />
+        {/* === Fecha de Inicio === */}
+        <Text style={styles.label}>Fecha de Inicio *</Text>
+        <TouchableOpacity
+          style={styles.dateInput}
+          onPress={() => setShowStartPicker(true)}
+        >
+          <MaterialIcons name="calendar-today" size={22} color="#2c3e50" />
+          <Text style={styles.dateText}>
+            {formData.startDate ? formData.startDate : "Seleccionar fecha"}
+          </Text>
+        </TouchableOpacity>
 
-        <InputField
-          label="Fecha de Fin"
-          placeholder="Ej: Diciembre 2023 o 'Actual'"
-          value={formData.endDate}
-          onChangeText={(text) => setFormData({ ...formData, endDate: text })}
-        />
+        {showStartPicker && (
+          <DateTimePicker
+            value={formData.startDate ? new Date(formData.startDate) : new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(event, date) => {
+              setShowStartPicker(false);
+              if (date) {
+                setFormData({
+                  ...formData,
+                  startDate: date.toISOString().split("T")[0],
+                });
+              }
+            }}
+          />
+        )}
+
+        {/* === Fecha de Fin === */}
+        <Text style={styles.label}>Fecha de Fin</Text>
+        <TouchableOpacity
+          style={styles.dateInput}
+          onPress={() => setShowEndPicker(true)}
+        >
+          <MaterialIcons name="calendar-today" size={22} color="#2c3e50" />
+          <Text style={styles.dateText}>
+            {formData.endDate ? formData.endDate : "Seleccionar fecha"}
+          </Text>
+        </TouchableOpacity>
+
+        {showEndPicker && (
+          <DateTimePicker
+            value={formData.endDate ? new Date(formData.endDate) : new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(event, date) => {
+              setShowEndPicker(false);
+              if (date) {
+                setFormData({
+                  ...formData,
+                  endDate: date.toISOString().split("T")[0],
+                });
+              }
+            }}
+          />
+        )}
 
         <InputField
           label="Descripción"
@@ -160,6 +226,27 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#2c3e50",
     marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    color: "#2c3e50",
+    marginBottom: 6,
+    fontWeight: "500",
+  },
+  dateInput: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  dateText: {
+    color: "#34495e",
+    fontSize: 14,
   },
   listTitle: {
     fontSize: 18,
